@@ -2,6 +2,7 @@
   "name": "orrery",
   "version": "1.0.0",
   "private": true,
+  "type": "commonjs",
   "description": "Free public Astronomy Pro API — positions, rise/set, eclipses, seasons, conjunctions.",
   "license": "MIT",
   "main": "src/server.ts",
