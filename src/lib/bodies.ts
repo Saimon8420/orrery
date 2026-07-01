@@ -48,3 +48,18 @@ export function phaseLabel(phaseAngleDeg: number): string {
   if (a < 292.5) return "Last Quarter";
   return "Waning Crescent";
 }
+
+/**
+ * Phase name from a body's illuminated fraction (0..1) as seen from Earth,
+ * with waxing/waning supplied by the caller (illuminated fraction increasing =
+ * waxing). Used for the planets — Mercury and Venus show real crescent→gibbous
+ * phases, the outer planets stay near-full. "New" and "Full" take no prefix.
+ */
+export function phaseName(illuminatedFraction: number, waxing: boolean): string {
+  const f = illuminatedFraction;
+  if (f >= 0.996) return "Full";
+  if (f <= 0.004) return "New";
+  if (f <= 0.46) return waxing ? "Waxing Crescent" : "Waning Crescent";
+  if (f < 0.54) return waxing ? "First Quarter" : "Last Quarter";
+  return waxing ? "Waxing Gibbous" : "Waning Gibbous";
+}

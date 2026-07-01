@@ -2,7 +2,7 @@ import {
   AngleFromSun, Constellation, Illumination, Horizon, MoonPhase, Observer,
 } from "astronomy-engine";
 import type { BodyKey } from "./bodies";
-import { phaseLabel, toAstroBody } from "./bodies";
+import { phaseLabel, phaseName, toAstroBody } from "./bodies";
 import { geoEcliptic, equatorialOfDate, equatorialJ2000 } from "./ephemeris";
 import { round } from "./format";
 
@@ -32,17 +32,17 @@ export function computePosition(key: BodyKey, date: Date, observer?: Observer): 
 
   let magnitude: number | null = null;
   let illum = 1;
-  let angularDiameterDeg = 0;
+  let phase = "";
   if (key !== "sun") {
     const info = Illumination(toAstroBody(key), date);
     magnitude = round(info.mag, 2);
     illum = info.phase_fraction;
+    phase = computePhase(key, date, illum);
   }
-  // angular diameter: 2 * atan(radius / distance). Use engine's per-body radius via Illumination? Fallback known radii.
-  angularDiameterDeg = round(angularDiameter(key, eq.distAu), 5);
+  // angular diameter: 2 * atan(radius / distance), using each body's mean radius.
+  const angularDiameterDeg = round(angularDiameter(key, eq.distAu), 5);
 
   const elongationDeg = key === "sun" ? 0 : AngleFromSun(toAstroBody(key), date);
-  const phaseAngle = key === "moon" ? moonPhaseAngle(date) : 0;
 
   const pos: Position = {
     body: key,
@@ -56,7 +56,7 @@ export function computePosition(key: BodyKey, date: Date, observer?: Observer): 
     elongationDeg: round(elongationDeg, 3),
     magnitude,
     illuminatedFraction: round(illum, 4),
-    phase: key === "moon" ? phaseLabel(phaseAngle) : "",
+    phase,
   };
 
   if (observer) {
@@ -70,6 +70,19 @@ export function computePosition(key: BodyKey, date: Date, observer?: Observer): 
 
 function moonPhaseAngle(date: Date): number {
   return MoonPhase(date); // 0=new, 90=first quarter, 180=full, 270=last
+}
+
+/**
+ * Phase name as seen from Earth. The Moon uses its canonical longitude-based
+ * lunar phase. Every other body is labelled from its illuminated fraction, with
+ * waxing/waning taken from whether that fraction is larger one hour later — a
+ * geometry-agnostic test that is correct for inner planets (which wane as
+ * evening stars) and outer planets (which stay near-full) alike.
+ */
+function computePhase(key: BodyKey, date: Date, illum: number): string {
+  if (key === "moon") return phaseLabel(moonPhaseAngle(date));
+  const later = Illumination(toAstroBody(key), new Date(date.getTime() + 3600000)).phase_fraction;
+  return phaseName(illum, later > illum);
 }
 
 // Mean equatorial radii in km (for angular diameter). AU = 149597870.7 km.

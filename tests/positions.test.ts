@@ -20,6 +20,21 @@ describe("positions", () => {
     expect(res.body.data.position.altitude).toBeTypeOf("number");
     expect(res.body.data.position.aboveHorizon).toBeTypeOf("boolean");
   });
+  it("labels a phase for every body except the Sun", async () => {
+    const res = await request(buildApp()).get("/v1/positions?datetime=2026-07-01T06:39:25Z");
+    expect(res.status).toBe(200);
+    const by = Object.fromEntries(res.body.data.bodies.map((b: any) => [b.body, b]));
+    // Sun has no phase; every other body gets a non-empty label.
+    expect(by.sun.phase).toBe("");
+    for (const k of ["moon", "mercury", "venus", "mars", "jupiter", "pluto"]) {
+      expect(by[k].phase, `${k} should have a phase`).not.toBe("");
+    }
+    // Inner planets show real crescent/gibbous phases (not always "Full").
+    expect(by.mercury.phase).toContain("Crescent");
+    expect(by.venus.phase).toContain("Gibbous");
+    // A near-fully-lit outer planet reads as Full.
+    expect(by.pluto.phase).toBe("Full");
+  });
   it("rejects a datetime whose year is outside 1700-2200", async () => {
     const res = await request(buildApp()).get("/v1/positions?datetime=1600-01-01T00:00:00Z");
     expect(res.status).toBe(400);
