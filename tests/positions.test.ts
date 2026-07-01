@@ -24,11 +24,14 @@ describe("positions", () => {
     const res = await request(buildApp()).get("/v1/positions?datetime=2026-07-01T06:39:25Z");
     expect(res.status).toBe(200);
     const by = Object.fromEntries(res.body.data.bodies.map((b: any) => [b.body, b]));
-    // Sun has no phase; every other body gets a non-empty label.
-    expect(by.sun.phase).toBe("");
-    for (const k of ["moon", "mercury", "venus", "mars", "jupiter", "pluto"]) {
+    // Every body gets a non-empty phase label.
+    for (const k of ["sun", "moon", "mercury", "venus", "mars", "jupiter", "pluto"]) {
       expect(by[k].phase, `${k} should have a phase`).not.toBe("");
     }
+    // The Sun always shows a fully-lit disk and a real (non-null) magnitude.
+    expect(by.sun.phase).toBe("Full");
+    expect(by.sun.magnitude).toBeTypeOf("number");
+    expect(by.sun.magnitude).toBeLessThan(-25);
     // Inner planets show real crescent/gibbous phases (not always "Full").
     expect(by.mercury.phase).toContain("Crescent");
     expect(by.venus.phase).toContain("Gibbous");

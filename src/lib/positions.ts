@@ -38,6 +38,12 @@ export function computePosition(key: BodyKey, date: Date, observer?: Observer): 
     magnitude = round(info.mag, 2);
     illum = info.phase_fraction;
     phase = computePhase(key, date, illum);
+  } else {
+    // The Sun is self-luminous: from Earth we always see its fully-lit disk, so
+    // illuminatedFraction is 1 and the phase is "Full". Apparent magnitude
+    // scales with distance from the standard -26.74 at 1 AU.
+    magnitude = round(-26.74 + 5 * Math.log10(eq.distAu), 2);
+    phase = "Full";
   }
   // angular diameter: 2 * atan(radius / distance), using each body's mean radius.
   const angularDiameterDeg = round(angularDiameter(key, eq.distAu), 5);
