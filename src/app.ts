@@ -20,3 +20,9 @@ export function buildApp(): express.Express {
   app.use(errorHandler);
   return app;
 }
+
+// A ready-built app instance as the default export, so the module works as a
+// serverless-function entry point (Vercel requires the default export to be a
+// function/server) as well as via buildApp() in tests and local dev.
+export const app = buildApp();
+export default app;

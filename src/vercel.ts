@@ -1,3 +1,6 @@
-import { buildApp } from "./app";
+// Build entry for the Vercel serverless function.
+// esbuild bundles this (and all dependencies) into a single self-contained
+// CommonJS file at api/index.js — see the "bundle" script in package.json.
+import app from "./app";
 
-export default buildApp();
+export default app;
